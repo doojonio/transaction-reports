@@ -1,5 +1,7 @@
 import asyncio
 
+import factory
+import factory.alchemy
 import pytest
 from sqlalchemy.ext.asyncio import async_scoped_session, async_sessionmaker, create_async_engine
 
@@ -7,11 +9,21 @@ from app.db import get_async_session
 from app.settings import settings
 from main import app
 
-async_engine = create_async_engine(str(settings.DATABASE_URL))
-async_session = async_scoped_session(
-    async_sessionmaker(async_engine, autocommit=False, autoflush=False, expire_on_commit=False),
-    scopefunc=lambda: asyncio.current_task().get_name(),  # type: ignore[union-attr]
-)
+
+class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
+    class Meta:
+        abstract = True
+
+    @classmethod
+    async def _create(cls, model_class, *args, **kwargs):
+        session = BaseFactory._meta.sqlalchemy_session
+        if session is None:
+            raise RuntimeError(f"No session bound to {cls.__name__}")
+
+        instance = model_class(*args, **kwargs)
+        session.add(instance)
+        await session.flush()
+        return instance
 
 
 @pytest.fixture(autouse=True)
@@ -19,8 +31,27 @@ async def _override_db(db):
     app.dependency_overrides[get_async_session] = lambda: db
 
 
+@pytest.fixture(autouse=True)
+async def _set_factory_session(db):
+    BaseFactory._meta.sqlalchemy_session = db
+    yield
+    BaseFactory._meta.sqlalchemy_session = None
+
+
+@pytest.fixture(scope="session")
+def engine():
+    return create_async_engine(str(settings.DATABASE_URL))
+
+
 @pytest.fixture()
-async def db():
+async def db(engine):
+    async_session = async_scoped_session(
+        async_sessionmaker(engine, autocommit=False, autoflush=False, expire_on_commit=False),
+        scopefunc=lambda: asyncio.current_task().get_name(),  # type: ignore[union-attr]
+    )
     async with async_session() as session:
-        async with session.begin():
-            yield session
+        async with session.begin() as tr:
+            try:
+                yield session
+            finally:
+                await tr.rollback()
