@@ -8,9 +8,9 @@ from app.routes.report import router as report_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.redis = await init_cache()
+    app.state.cache = await init_cache()
     yield
-    await app.state.redis.close()
+    await app.state.cache.close()
 
 
 app = FastAPI(lifespan=lifespan)

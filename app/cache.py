@@ -11,4 +11,4 @@ async def init_cache():
 
 
 def get_cache(request: Request):
-    return request.app.state.redis
+    return request.app.state.cache
