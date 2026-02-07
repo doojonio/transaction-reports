@@ -4,7 +4,7 @@ import factory
 
 from app.models import Transaction, User
 from app.models.transactions import TransactionStatus, TransactionType
-from tests.conftest import BaseFactory
+from tests.base_factory import BaseFactory
 
 
 class UserFactory(BaseFactory):

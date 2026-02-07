@@ -1,29 +1,12 @@
 import asyncio
 
-import factory
-import factory.alchemy
 import pytest
 from sqlalchemy.ext.asyncio import async_scoped_session, async_sessionmaker, create_async_engine
 
 from app.db import get_async_session
 from app.settings import settings
 from main import app
-
-
-class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
-    class Meta:
-        abstract = True
-
-    @classmethod
-    async def _create(cls, model_class, *args, **kwargs):
-        session = BaseFactory._meta.sqlalchemy_session
-        if session is None:
-            raise RuntimeError(f"No session bound to {cls.__name__}")
-
-        instance = model_class(*args, **kwargs)
-        session.add(instance)
-        await session.flush()
-        return instance
+from tests.base_factory import BaseFactory
 
 
 @pytest.fixture(autouse=True)
