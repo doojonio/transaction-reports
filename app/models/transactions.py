@@ -51,3 +51,9 @@ class Transaction(Base):
     )
 
     user: Mapped["User"] = relationship("User", back_populates="transactions")
+
+    def __repr__(self):
+        return (
+            f"Transaction(id={self.id}, sum={self.sum}, "
+            + "status={self.status}, type={self.type}, user_id={self.user_id})"
+        )
