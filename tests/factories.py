@@ -26,7 +26,7 @@ class TransactionFactory(BaseFactory):
     id = factory.LazyFunction(uuid.uuid4)
     # subfactories do not work with async session
     user = factory.SubFactory(UserFactory)
-    sum = factory.Faker("pydecimal", left_digits=13, right_digits=2, positive=True)
+    sum = factory.Faker("pydecimal", right_digits=2, min_value=1, max_value=1000)
     status = factory.Faker("random_element", elements=list(TransactionStatus))
     type = factory.Faker("random_element", elements=list(TransactionType))
     created_at = factory.Faker("date_time_between", start_date="-2y", end_date="now")
