@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
 
-from app.db import AsyncSession, get_async_session
 from app.cache import Cache, get_cache
+from app.db import AsyncSession, get_async_session
 
 router = APIRouter(prefix="/report", tags=["report"])
 

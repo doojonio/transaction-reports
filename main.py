@@ -1,8 +1,8 @@
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 
 from app.cache import init_cache
-
 from app.routes.report import router as report_router
 
 

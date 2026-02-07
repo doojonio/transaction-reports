@@ -1,4 +1,9 @@
-from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine, AsyncSession  # noqa: F401
+from sqlalchemy.ext.asyncio import (  # noqa: F401
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+
 from app.settings import settings
 
 async_engine = create_async_engine(str(settings.DATABASE_URL), echo=True)
