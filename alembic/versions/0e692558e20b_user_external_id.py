@@ -38,9 +38,9 @@ def upgrade() -> None:
         server_default=sa.text("nextval('users_external_id_seq')"),
         nullable=False,
     )
+    op.create_index("ix_users_external_id", "users", ["external_id"], unique=True)
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     op.drop_column("users", "external_id")
-    op.execute("DROP SEQUENCE users_external_id_seq;")
