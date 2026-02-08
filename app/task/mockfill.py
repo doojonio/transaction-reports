@@ -7,7 +7,7 @@ USERS = 106
 TRANSACTIONS = 112
 
 
-async def mockfill(db: AsyncSession):
+async def mockfill(db: AsyncSession) -> None:
     if await _idempotence_check(db):
         return
 
@@ -18,10 +18,10 @@ async def mockfill(db: AsyncSession):
         transactions = f.TransactionFactory.build_batch(
             100,
             user=user,
-            created_at=f.factory.Faker(
+            created_at=f.factory.Faker(  # type: ignore[attr-defined]
                 "date_time_between", start_date=user.created_at, end_date="now"
             ),
-            updated_at=f.factory.Faker(
+            updated_at=f.factory.Faker(  # type: ignore[attr-defined]
                 "date_time_between", start_date=user.created_at, end_date="now"
             ),
         )
@@ -31,7 +31,7 @@ async def mockfill(db: AsyncSession):
     await db.commit()
 
 
-async def _idempotence_check(db: AsyncSession):
+async def _idempotence_check(db: AsyncSession) -> bool:
     stmt = text("SELECT EXISTS(select FROM users)")
     result = await db.execute(stmt)
-    return result.scalar()
+    return bool(result.scalar())

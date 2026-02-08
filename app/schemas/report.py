@@ -4,14 +4,12 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from app.models.transactions import TransactionStatus, TransactionType
-
 
 class ReportSchemaIn(BaseModel):
     start_date: date | None = None
     end_date: date | None = None
-    status: Literal[str(TransactionStatus.SUCCESSFULL), str(TransactionStatus.FAILED), "all"]
-    type: Literal[str(TransactionType.PAYMENT), str(TransactionType.INVOICE), "all"]
+    status: Literal["successfull", "failed", "all"]
+    type: Literal["payment", "invoice", "all"]
     include_avg: bool
     include_min: bool
     include_max: bool

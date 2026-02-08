@@ -35,10 +35,10 @@ class User(Base):
     transactions: Mapped[list["Transaction"]] = relationship("Transaction", back_populates="user")
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
         return f"{self.first_name} {self.last_name}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"User(id={self.id}, first_name={self.first_name}, "
             + "last_name={self.last_name}, email={self.email})"

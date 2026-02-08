@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 
 from fastapi import FastAPI
 
@@ -12,7 +13,7 @@ from app.task.mockfill import mockfill
 @asynccontextmanager
 async def lifespan(
     app: FastAPI,
-):
+) -> AsyncGenerator[None, None]:
     app.state.cache = await init_cache()
 
     if settings.MOCKFILL:
@@ -29,7 +30,7 @@ app.include_router(report_router)
 
 
 @app.get("/health")
-def health():
+def health() -> dict[str, str]:
     return {"health": "ok"}
 
 

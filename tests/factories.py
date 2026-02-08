@@ -2,8 +2,8 @@ import uuid
 
 import factory
 
-from app.models import Transaction, User
-from app.models.transactions import TransactionStatus, TransactionType
+from app.models.transactions import Transaction, TransactionStatus, TransactionType
+from app.models.users import User
 from tests.base_factory import BaseFactory
 
 

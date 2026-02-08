@@ -1,17 +1,17 @@
 from datetime import date
 from typing import Annotated
 
-from dateutil.relativedelta import relativedelta
+from dateutil.relativedelta import relativedelta  # type: ignore[import-untyped]
 from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.cache import Cache, get_cache
-from app.db import AsyncSession, get_async_session
+from app.db import get_async_session
 from app.models.transactions import TransactionStatus, TransactionType
-from app.queries.timespan_transactions import (
-    TimespanTransactionsQuery,
-    TimespanTransactionsQueryParams,
-)
-from app.schemas.report import ReportSchemaIn, ReportSchemaOut
+from app.queries.timespan_transactions_metrics import MetricsItem
+from app.schemas.report import ReportSchemaIn
+from app.services import transaction_reports
+from app.utils.date import DateRange
 
 router = APIRouter(prefix="/report", tags=["report"])
 
@@ -22,40 +22,17 @@ async def get_report(
     params: Annotated[ReportSchemaIn, Query()],
     db: AsyncSession = Depends(get_async_session),
     redis: Cache = Depends(get_cache),
-):
-    query_params = _build_query_params(params)
-    query = TimespanTransactionsQuery(db, query_params)
-
-    avg = None
-    min = None
-    max = None
-    daily_shift = None
-
-    async for res in query:
-        total = res["sum_total"]
-        avg = res["sum_avg"]
-        min = res["sum_min"]
-        max = res["sum_max"]
-        daily_shift = "TODO"
-
-    return ReportSchemaOut(
-        total=total,
-        avg=avg,
-        min=min,
-        max=max,
-        daily_shift=daily_shift,
-    )
-
-
-def _build_query_params(params: ReportSchemaIn):
+) -> list[MetricsItem]:
     start_date, end_date = params.start_date, params.end_date
     if start_date is None:
         start_date = date.today() + relativedelta(months=-1)
     if end_date is None:
         end_date = date.today()
 
-    if start_date > end_date:
-        raise HTTPException(status_code=400, detail="start_date must be less than end_date")
+    try:
+        date_range = DateRange(start_date, end_date)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=exc.args[0])
 
     status = None
     if params.status != "all":
@@ -65,13 +42,15 @@ def _build_query_params(params: ReportSchemaIn):
     if params.type != "all":
         type_ = TransactionType(params.type)
 
-    return TimespanTransactionsQueryParams(
-        start_date=start_date,
-        end_date=end_date,
-        status=status,
-        type=type_,
-        include_avg=params.include_avg,
-        include_min=params.include_min,
-        include_max=params.include_max,
-        include_daily_shift=params.include_daily_shift,
+    results = await transaction_reports.get_timespan_transactions_metrics(
+        db,
+        date_range,
+        status,
+        type_,
+        params.include_avg,
+        params.include_min,
+        params.include_max,
+        params.include_daily_shift,
     )
+
+    return results

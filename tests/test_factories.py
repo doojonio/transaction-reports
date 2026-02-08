@@ -1,7 +1,8 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Transaction, User
+from app.models.transactions import Transaction
+from app.models.users import User
 from tests.factories import TransactionFactory, UserFactory
 
 
