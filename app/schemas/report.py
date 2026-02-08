@@ -15,6 +15,14 @@ class ReportSchemaIn(BaseModel):
     include_max: bool
     include_daily_shift: bool
 
+    @property
+    def cache_key(self) -> str:
+        return (
+            f"report_{self.start_date}_{self.end_date}_{self.status}"
+            + f"_{self.type}_{self.include_avg}_{self.include_min}_"
+            + f"{self.include_max}_{self.include_daily_shift}"
+        )
+
 
 class ReportSchemaOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
