@@ -176,7 +176,11 @@ async def get_report_by_countries(
     )
 
     for user_eid, count, total, avg in user_transactions_result:
-        dataframe.loc[dataframe["id"] == user_eid, ["count", "total", "avg"]] = [count, total, avg]
+        dataframe.loc[dataframe["id"] == user_eid, ["count", "total", "avg"]] = [
+            int(count),
+            float(total),
+            float(avg),
+        ]
 
     dataframe = dataframe.groupby("country", as_index=False).agg(
         count=("count", "sum"),
