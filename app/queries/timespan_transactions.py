@@ -3,6 +3,7 @@ from datetime import date
 from functools import cached_property
 
 from sqlalchemy import and_, func, select
+from sqlalchemy.orm import aliased
 
 from app.db import AsyncSession
 from app.models.transactions import Transaction, TransactionStatus, TransactionType
@@ -54,36 +55,32 @@ class TimespanTransactionsQuery:
         return and_(*filters)
 
     def _column_avg(self):
-        if not self._params.include_avg or self._params.status == TransactionStatus.FAILED:
+        if not self._params.include_avg:
             return None
 
-        return (
-            func.avg(Transaction.sum)
-            .filter(Transaction.status == TransactionStatus.SUCCESSFULL)
-            .over()
-            .label("sum_avg")
-        )
+        return func.avg(self._cte_filtered_transactions.sum).over().label("sum_avg")
 
     def _column_min(self):
-        if not self._params.include_min or self._params.status == TransactionStatus.FAILED:
+        if not self._params.include_min:
             return None
 
-        return (
-            func.min(Transaction.sum)
-            .filter(Transaction.status == TransactionStatus.SUCCESSFULL)
-            .over()
-            .label("sum_min")
-        )
+        return func.min(self._cte_filtered_transactions.sum).over().label("sum_min")
 
     def _column_max(self):
-        if not self._params.include_max or self._params.status == TransactionStatus.FAILED:
+        if not self._params.include_max:
+            return None
+
+        return func.max(self._cte_filtered_transactions.sum).over().label("sum_max")
+
+    def _column_total(self):
+        if self._params.status == TransactionStatus.FAILED:
             return None
 
         return (
-            func.max(Transaction.sum)
-            .filter(Transaction.status == TransactionStatus.SUCCESSFULL)
+            func.sum(self._cte_filtered_transactions.sum)
+            .filter(self._cte_filtered_transactions.status == TransactionStatus.SUCCESSFULL)
             .over()
-            .label("sum_max")
+            .label("sum_total")
         )
 
     # TODO: add daily shift
@@ -91,11 +88,12 @@ class TimespanTransactionsQuery:
         if not self._params.include_daily_shift:
             return None
 
-        return func.date(Transaction.created_at).label("daily_shift")
+        return func.date(self._cte_filtered_transactions.created_at).label("daily_shift")
 
     def _build_columns(self):
         columns = []
         for method in [
+            self._column_total,
             self._column_avg,
             self._column_min,
             self._column_max,
@@ -109,8 +107,18 @@ class TimespanTransactionsQuery:
         return columns
 
     @cached_property
+    def _cte_filtered_transactions(self):
+        cte = (
+            select(Transaction)
+            .where(self._build_filters())
+            .cte("filtered_transactions")
+            .prefix_with("MATERIALIZED")
+        )
+        return aliased(Transaction, cte)
+
+    @cached_property
     def _stmt(self):
-        return select(Transaction, *self._build_columns()).where(self._build_filters())
+        return select(*self._build_columns()).select_from(self._cte_filtered_transactions)
 
     async def _execute_stmt(self):
         return await self._db.execute(self._stmt)

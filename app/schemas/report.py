@@ -1,5 +1,4 @@
-import uuid
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from typing import Literal
 
@@ -19,21 +18,8 @@ class ReportSchemaIn(BaseModel):
     include_daily_shift: bool
 
 
-class ReportTransactionSchema(BaseModel):
-    id: uuid.UUID
-    sum: Decimal
-    status: TransactionStatus
-    type: TransactionType
-    user_id: uuid.UUID
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
 class ReportSchemaOut(BaseModel):
-    transactions: list[ReportTransactionSchema]
+    total: Decimal
     avg: Decimal | None = None
     min: Decimal | None = None
     max: Decimal | None = None

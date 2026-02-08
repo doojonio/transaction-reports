@@ -11,11 +11,12 @@ from app.queries.timespan_transactions import (
     TimespanTransactionsQuery,
     TimespanTransactionsQueryParams,
 )
-from app.schemas.report import ReportSchemaIn, ReportSchemaOut, ReportTransactionSchema
+from app.schemas.report import ReportSchemaIn, ReportSchemaOut
 
 router = APIRouter(prefix="/report", tags=["report"])
 
 
+# TODO: caching, rate limiting
 @router.get("")
 async def get_report(
     params: Annotated[ReportSchemaIn, Query()],
@@ -29,19 +30,16 @@ async def get_report(
     min = None
     max = None
     daily_shift = None
-    transactions = []
 
     async for res in query:
+        total = res["sum_total"]
         avg = res["sum_avg"]
         min = res["sum_min"]
         max = res["sum_max"]
         daily_shift = "TODO"
-        transaction = res["Transaction"]
-
-        transactions.append(ReportTransactionSchema.model_validate(transaction))
 
     return ReportSchemaOut(
-        transactions=transactions,
+        total=total,
         avg=avg,
         min=min,
         max=max,
