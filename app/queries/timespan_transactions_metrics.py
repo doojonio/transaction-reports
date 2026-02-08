@@ -276,6 +276,8 @@ class TimespanTransactionsMetricsQuery:
                 sum_max_daily_shift=_decimal_or_none(mapping.get("sum_max_daily_shift", None)),
             )
         except StopIteration:
+            if self._query is not None:
+                self._query.close()
             raise StopAsyncIteration
 
 

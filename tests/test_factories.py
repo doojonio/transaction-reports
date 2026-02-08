@@ -16,8 +16,10 @@ async def test_factories(db: AsyncSession):
     assert transaction.id is not None
     assert transaction2.id is not None
 
-    users = (await db.execute(select(User))).scalars().all()
-    transactions = (await db.execute(select(Transaction))).scalars().all()
+    users = (await db.execute(select(User).filter_by(id=user.id))).scalars().all()
+    transactions = (
+        (await db.execute(select(Transaction).filter_by(user_id=user.id))).scalars().all()
+    )
     assert len(users) == 1
     assert len(transactions) == 2
 

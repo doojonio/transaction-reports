@@ -159,6 +159,10 @@ async def get_report_by_countries(
     if not user_ids:
         return []
 
+    dataframe["count"] = 0
+    dataframe["total"] = 0.0
+    dataframe["avg"] = 0.0
+
     user_transactions_result = await db.execute(
         select(
             User.external_id,

@@ -1,7 +1,5 @@
-import asyncio
-
 import pytest
-from sqlalchemy.ext.asyncio import async_scoped_session, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.db import get_async_session
 from app.settings import settings
@@ -21,18 +19,19 @@ async def _set_factory_session(db):
     BaseFactory._meta.sqlalchemy_session = None
 
 
-@pytest.fixture(scope="session")
-def engine():
-    return create_async_engine(str(settings.DATABASE_URL))
+@pytest.fixture()
+async def engine():
+    engine = create_async_engine(str(settings.DATABASE_URL))
+    yield engine
+    await engine.dispose()
 
 
 @pytest.fixture()
 async def db(engine):
-    async_session = async_scoped_session(
-        async_sessionmaker(engine, autocommit=False, autoflush=False, expire_on_commit=False),
-        scopefunc=lambda: asyncio.current_task().get_name(),  # type: ignore[union-attr]
+    async_session_factory = async_sessionmaker(
+        engine, autocommit=False, autoflush=False, expire_on_commit=False
     )
-    async with async_session() as session:
+    async with async_session_factory() as session:
         async with session.begin() as tr:
             try:
                 yield session
