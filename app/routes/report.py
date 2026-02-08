@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.cache import Cache, get_cache
 from app.db import get_async_session
 from app.models.transactions import TransactionStatus, TransactionType
-from app.queries.timespan_transactions_metrics import MetricsItem
 from app.schemas.report import ReportSchemaIn
 from app.services import transaction_reports
 from app.utils.date import DateRange
@@ -22,7 +21,7 @@ async def get_report(
     params: Annotated[ReportSchemaIn, Query()],
     db: AsyncSession = Depends(get_async_session),
     redis: Cache = Depends(get_cache),
-) -> list[MetricsItem]:
+) -> transaction_reports.TimespanTransactionsMetrics:
     start_date, end_date = params.start_date, params.end_date
     if start_date is None:
         start_date = date.today() + relativedelta(months=-1)

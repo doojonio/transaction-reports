@@ -22,6 +22,15 @@ class TimespanTransactionsMetricsQueryParams:
     include_max: bool = False
     include_daily_shift: bool = False
 
+    def __post_init__(self) -> None:
+        if self.status == TransactionStatus.FAILED and not (
+            self.include_avg or self.include_min or self.include_max
+        ):
+            raise ValueError(
+                "At least one of include_avg, include_min, include_max must be True "
+                + "when status is FAILED"
+            )
+
 
 @dataclass(slots=True, kw_only=True)
 class MetricsItem:
