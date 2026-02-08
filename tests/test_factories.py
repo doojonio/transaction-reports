@@ -7,6 +7,7 @@ from tests.factories import TransactionFactory, UserFactory
 
 
 async def test_factories(db: AsyncSession):
+    """Test factories."""
     user = await UserFactory()
     transaction = await TransactionFactory(user=user)
     transaction2 = await TransactionFactory(user=user)

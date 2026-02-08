@@ -32,6 +32,7 @@ async def mockfill(db: AsyncSession) -> None:
 
 
 async def _idempotence_check(db: AsyncSession) -> bool:
+    """Check if db is already seeded."""
     stmt = text("SELECT EXISTS(select FROM users)")
     result = await db.execute(stmt)
     return bool(result.scalar())

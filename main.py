@@ -31,6 +31,7 @@ app.include_router(report_router)
 
 @app.get("/health")
 def health() -> dict[str, str]:
+    """Health check endpoint."""
     return {"health": "ok"}
 
 

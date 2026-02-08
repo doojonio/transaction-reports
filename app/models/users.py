@@ -36,9 +36,11 @@ class User(Base):
 
     @property
     def full_name(self) -> str:
+        """Return user's full name."""
         return f"{self.first_name} {self.last_name}"
 
     def __repr__(self) -> str:
+        """Return string representation of user."""
         return (
             f"User(id={self.id}, first_name={self.first_name}, "
             + "last_name={self.last_name}, email={self.email})"

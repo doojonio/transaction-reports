@@ -23,6 +23,7 @@ class TimespanTransactionsMetricsQueryParams:
     include_daily_shift: bool = False
 
     def __post_init__(self) -> None:
+        """Validate query parameters."""
         if self.status == TransactionStatus.FAILED and not (
             self.include_avg or self.include_min or self.include_max
         ):
@@ -223,6 +224,7 @@ class TimespanTransactionsMetricsQuery:
 
 
 def _decimal_or_none(value: Any) -> Decimal | None:
+    """Convert to decimal or none."""
     if value is None:
         return None
     return Decimal(value)

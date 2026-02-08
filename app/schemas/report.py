@@ -17,6 +17,7 @@ class ReportSchemaIn(BaseModel):
 
     @property
     def cache_key(self) -> str:
+        """Generate cache key."""
         return (
             f"report_{self.start_date}_{self.end_date}_{self.status}"
             + f"_{self.type}_{self.include_avg}_{self.include_min}_"
