@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Annotated
+from typing import Annotated, Literal
 
 from dateutil.relativedelta import relativedelta  # type: ignore[import-untyped]
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -9,7 +9,7 @@ from app.cache import Cache, get_cache
 from app.db import get_async_session
 from app.models.transactions import TransactionStatus, TransactionType
 from app.policies.cache import REPORT_CACHE_TTL_SECONDS
-from app.schemas.report import ReportSchemaIn, ReportSchemaOut
+from app.schemas.report import ReportByCountryOut, ReportSchemaIn, ReportSchemaOut
 from app.services import transaction_reports
 from app.utils.date import DateRange
 
@@ -85,3 +85,24 @@ async def get_report(
     model = ReportSchemaOut.model_validate(metrics)
     await redis.set(cache_key, model.model_dump_json(), ex=REPORT_CACHE_TTL_SECONDS)
     return model
+
+
+@router.get("/by-country", response_model=ReportByCountryOut)
+async def get_report_by_country(
+    db: AsyncSession = Depends(get_async_session),
+    redis: Cache = Depends(get_cache),
+    sort_by: Literal["total", "count", "avg"] | None = None,
+    top_n: int | None = None,
+) -> ReportByCountryOut:
+    cache_key = f"report_by_country_{sort_by}_{top_n}"
+
+    sort_by_enum = transaction_reports.ReportByCountriesSort(sort_by) if sort_by else None
+
+    items = await transaction_reports.get_report_by_countries(db, sort_by=sort_by_enum, top_n=top_n)
+
+    result = ReportByCountryOut(
+        items=[ReportByCountryOut.Item.model_validate(item) for item in items]
+    )
+
+    await redis.set(cache_key, result.model_dump_json(), ex=REPORT_CACHE_TTL_SECONDS)
+    return result

@@ -1,15 +1,20 @@
+import enum
 from dataclasses import dataclass, replace
 from datetime import date
 from decimal import Decimal
 
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.transactions import TransactionStatus, TransactionType
+from app.models.transactions import Transaction, TransactionStatus, TransactionType
+from app.models.users import User
 from app.queries.timespan_transactions_metrics import (
     TimespanTransactionsMetricsQuery,
     TimespanTransactionsMetricsQueryParams,
 )
 from app.utils.date import DateRange
+
+from .user_countries import get_user_countries
 
 
 @dataclass
@@ -115,3 +120,59 @@ async def get_timespan_transactions_metrics(
         )
 
     return result_metrics
+
+
+class ReportByCountriesSort(str, enum.Enum):
+    COUNT = "count"
+    TOTAL = "total"
+    AVG = "avg"
+
+
+@dataclass
+class ReportByCountryItem:
+    country: str
+    count: int
+    total: Decimal
+    avg: Decimal
+
+
+async def get_report_by_countries(
+    db: AsyncSession, sort_by: ReportByCountriesSort | None = None, top_n: int | None = None
+) -> list[ReportByCountryItem]:
+    dataframe = get_user_countries()
+
+    user_ids = dataframe["id"].tolist()
+
+    if not user_ids:
+        return []
+
+    user_transactions_result = await db.execute(
+        select(
+            User.external_id,
+            func.count(Transaction.id).label("count"),
+            func.sum(Transaction.sum).label("total"),
+            func.avg(Transaction.sum).label("avg"),
+        )
+        .join(User.transactions)
+        .where(User.external_id.in_(user_ids))
+        .group_by(User.external_id)
+    )
+
+    for user_eid, count, total, avg in user_transactions_result:
+        dataframe.loc[dataframe["id"] == user_eid, ["count", "total", "avg"]] = [count, total, avg]
+
+    dataframe = dataframe.groupby("country", as_index=False).agg(
+        count=("count", "sum"),
+        total=("total", "sum"),
+        avg=("avg", "mean"),
+    )
+
+    if sort_by:
+        dataframe = dataframe.sort_values(by=sort_by.value, ascending=False)
+
+    if top_n:
+        dataframe = dataframe.head(top_n)
+
+    result = list(map(lambda x: ReportByCountryItem(**x), dataframe.to_dict(orient="records")))
+
+    return result

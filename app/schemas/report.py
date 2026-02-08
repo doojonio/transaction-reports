@@ -46,3 +46,17 @@ class ReportSchemaOut(BaseModel):
     min: Decimal | None
     max: Decimal | None
     daily: list[DailyMetric] | None
+
+
+class ReportByCountryOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    class Item(BaseModel):
+        model_config = ConfigDict(from_attributes=True)
+
+        country: str
+        avg: Decimal
+        total: Decimal
+        count: int
+
+    items: list[Item]
