@@ -43,6 +43,31 @@ async def get_timespan_transactions_metrics(
     include_max: bool = False,
     include_daily_shift: bool = False,
 ) -> TimespanTransactionsMetrics:
+    """Retrieve and aggregate transaction metrics over a specified timespan.
+
+    This service function orchestrates the process of fetching transaction
+    analytics. It performs two main queries if necessary:
+    1. An "overall" query to get the total, average, min, and max values
+       for the entire specified date range.
+    2. A "daily" query to get a day-by-day breakdown of metrics, including
+       the percentage change from the previous day for each metric.
+
+    Args:
+        db: The asynchronous database session.
+        date_range: The start and end dates for the report.
+        status: Optional filter for transaction status.
+        type: Optional filter for transaction type.
+        include_avg: Whether to include the average transaction sum.
+        include_min: Whether to include the minimum transaction sum.
+        include_max: Whether to include the maximum transaction sum.
+        include_daily_shift: Whether to include the daily metrics breakdown.
+
+    Returns:
+        A TimespanTransactionsMetrics object containing the aggregated data.
+        If query parameters are invalid (e.g., requesting metrics for 'failed'
+        status without specifying avg, min, or max), it returns a
+        zeroed/nulled metrics object.
+    """
     try:
         query_params = TimespanTransactionsMetricsQueryParams(
             date_range=date_range,

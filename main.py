@@ -14,6 +14,21 @@ from app.task.mockfill import mockfill
 async def lifespan(
     app: FastAPI,
 ) -> AsyncGenerator[None, None]:
+    """Manage application startup and shutdown events.
+
+    This async context manager is used by FastAPI as the application's
+    lifespan handler.
+
+    On startup, it:
+    1. Initializes the Redis cache connection and stores it in the app state.
+    2. If the `MOCKFILL` setting is True, it seeds the database with mock data.
+
+    On shutdown, it:
+    1. Gracefully closes the Redis cache connection.
+
+    Args:
+        app: The FastAPI application instance.
+    """
     app.state.cache = await init_cache()
 
     if settings.MOCKFILL:
