@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class ReportSchemaIn(BaseModel):
@@ -17,8 +17,23 @@ class ReportSchemaIn(BaseModel):
 
 
 class ReportSchemaOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    class DailyMetric(BaseModel):
+        model_config = ConfigDict(from_attributes=True)
+
+        date: date
+        total: Decimal
+        avg: Decimal | None
+        min: Decimal | None
+        max: Decimal | None
+        total_shift_rate: Decimal | None
+        avg_shift_rate: Decimal | None
+        min_shift_rate: Decimal | None
+        max_shift_rate: Decimal | None
+
     total: Decimal
-    avg: Decimal | None = None
-    min: Decimal | None = None
-    max: Decimal | None = None
-    daily_shift: str | None = None
+    avg: Decimal | None
+    min: Decimal | None
+    max: Decimal | None
+    daily: list[DailyMetric] | None

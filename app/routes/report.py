@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.cache import Cache, get_cache
 from app.db import get_async_session
 from app.models.transactions import TransactionStatus, TransactionType
-from app.schemas.report import ReportSchemaIn
+from app.schemas.report import ReportSchemaIn, ReportSchemaOut
 from app.services import transaction_reports
 from app.utils.date import DateRange
 
@@ -16,12 +16,12 @@ router = APIRouter(prefix="/report", tags=["report"])
 
 
 # TODO: caching, rate limiting
-@router.get("")
+@router.get("", response_model=ReportSchemaOut, response_model_exclude_none=True)
 async def get_report(
     params: Annotated[ReportSchemaIn, Query()],
     db: AsyncSession = Depends(get_async_session),
     redis: Cache = Depends(get_cache),
-) -> transaction_reports.TimespanTransactionsMetrics:
+) -> ReportSchemaOut:
     start_date, end_date = params.start_date, params.end_date
     if start_date is None:
         start_date = date.today() + relativedelta(months=-1)
@@ -41,7 +41,7 @@ async def get_report(
     if params.type != "all":
         type_ = TransactionType(params.type)
 
-    results = await transaction_reports.get_timespan_transactions_metrics(
+    metrics = await transaction_reports.get_timespan_transactions_metrics(
         db,
         date_range,
         status,
@@ -52,4 +52,4 @@ async def get_report(
         params.include_daily_shift,
     )
 
-    return results
+    return ReportSchemaOut.model_validate(metrics)
