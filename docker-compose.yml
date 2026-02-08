@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: transaction-reports-db
+    environment:
+      POSTGRES_USER: transaction-reports
+      POSTGRES_PASSWORD: s3cret_pw0123
+      POSTGRES_DB: transaction-reports
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U transaction-reports"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: transaction-reports-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build: .
+    container_name: transaction-reports-app
+    environment:
+      DATABASE_URL: postgresql+asyncpg://transaction-reports:s3cret_pw0123@postgres:5432/transaction-reports
+      REDIS_URL: redis://redis:6379/0
+      MOCKFILL: "true"
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./shared:/app/shared
+
+volumes:
+  postgres_data:

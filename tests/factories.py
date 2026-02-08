@@ -15,7 +15,7 @@ class UserFactory(BaseFactory):
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
     email = factory.Faker("email")
-    external_id = factory.Faker("random_int", min=1, max=100)
+    external_id = factory.Sequence(lambda n: n + 1)
     created_at = factory.Faker("date_time_between", start_date="-2y", end_date="now")
     updated_at = factory.LazyAttribute(lambda obj: obj.created_at)
 
