@@ -139,6 +139,19 @@ class ReportByCountryItem:
 async def get_report_by_countries(
     db: AsyncSession, sort_by: ReportByCountriesSort | None = None, top_n: int | None = None
 ) -> list[ReportByCountryItem]:
+    """
+    Get report by country.
+
+    Args:
+        db: Database session.
+        sort_by: Sort by total, count, or avg.
+        top_n: Top n countries.
+
+    Uses user_countries service to get user countries.
+
+    Returns:
+        aggregated metrics by user countries.
+    """
     dataframe = get_user_countries()
 
     user_ids = dataframe["id"].tolist()

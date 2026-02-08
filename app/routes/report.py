@@ -94,6 +94,14 @@ async def get_report_by_country(
     sort_by: Literal["total", "count", "avg"] | None = None,
     top_n: int | None = None,
 ) -> ReportByCountryOut:
+    """
+    Get report by country.
+
+    Args:
+        sort_by: Sort by total, count, or avg.
+        top_n: Top n countries.
+    """
+
     cache_key = f"report_by_country_{sort_by}_{top_n}"
 
     sort_by_enum = transaction_reports.ReportByCountriesSort(sort_by) if sort_by else None
