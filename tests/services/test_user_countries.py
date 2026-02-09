@@ -63,10 +63,9 @@ class TestGetUserCountries:
         with patch("app.services.user_countries.Path") as mock_path:
             # Mock the path chain to return a non-existent file
             nonexistent = Path("/nonexistent/path.csv")
-            chain = mock_path.return_value.__truediv__.return_value
-            chain = chain.__truediv__.return_value.__truediv__.return_value
-            chain.__class__ = type(nonexistent)
-            chain.__dict__.update(nonexistent.__dict__)
+            (
+                mock_path.return_value.__truediv__.return_value.__truediv__.return_value.__truediv__.return_value
+            ) = nonexistent
 
             with pytest.raises(FileNotFoundError):
                 get_user_countries()
