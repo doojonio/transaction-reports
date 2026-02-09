@@ -48,7 +48,10 @@ class TestTimespanTransactionsMetricsQueryParams:
     def test_failed_status_without_aggregates_raises_error(self):
         with pytest.raises(
             ValueError,
-            match="At least one of include_avg, include_min, include_max must be True when status is FAILED",
+            match=(
+                "At least one of include_avg, include_min, include_max must be True "
+                "when status is FAILED"
+            ),
         ):
             TimespanTransactionsMetricsQueryParams(
                 date_range=DateRange(date(2024, 1, 1), date(2024, 12, 31)),
