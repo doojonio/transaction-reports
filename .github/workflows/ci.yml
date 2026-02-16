@@ -85,7 +85,9 @@ jobs:
       run: docker compose run --rm app uv run alembic upgrade head
 
     - name: Run tests
-      run: docker compose run --rm -v ./coverage.xml:/app/coverage.xml app uv run pytest --cov app --cov-report=xml --cov-report=term
+      run: |
+        touch coverage.xml
+        docker compose run --rm -v ./coverage.xml:/app/coverage.xml app uv run pytest --cov app --cov-report=xml --cov-report=term
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
