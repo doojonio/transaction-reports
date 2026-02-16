@@ -1,5 +1,8 @@
 # Transaction Reports
 
+[![CI](https://github.com/doojonio/transaction-reports/actions/workflows/ci.yml/badge.svg)](https://github.com/doojonio/transaction-reports/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/doojonio/transaction-reports/graph/badge.svg)](https://codecov.io/gh/doojonio/transaction-reports)
+
 A FastAPI-based microservice for analyzing user transaction data with aggregated metrics and country-based reporting.
 
 ## Overview
